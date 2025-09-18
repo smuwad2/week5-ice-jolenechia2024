@@ -33,15 +33,27 @@
     </div>
     
     <script>
-        function getCategories() {
+        async function getCategories() {
             // Fetch categories from the server using Axios
             // and display them in the select element
             // url: http://localhost:3010/categories
-
+            try {
+                const response = await axios.get("http://localhost:3010/categories");
+                showCategories(response.data);
+                } catch (error) {
+                    console.error("Error fetching categories:", error);
+                }
         }
-
         function showCategories(categories) {
             // Display the categories in the select element
+            const select = document.getElementById("selectCategory");
+
+            categories.forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
             
         }
 
@@ -51,14 +63,67 @@
             // If "All" is chosen, fetch all items
             // If a specific category is chosen, fetch items for that category
             // url: http://localhost:3010/items?category=categoryName
-            
-        }
+            const category = document.getElementById ("selectCategory").value;
 
+            // If "To select" is chosen, do nothing
+            if (category === "0") return;
+
+            // Build URL
+            let url = "http://localhost:3010/items";
+            if (category !== "all") {
+                url += `?category=${encodeURIComponent(category)}`;
+            }
+
+            axios.get(url)
+                .then(response => {
+                    console.log(response.data);
+                    showItems(response.data);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        }
         function showItems(items) {
             // Display the items in the itemsList div
             // Each item should be displayed in a bootstrap card format
             // The display should be responsive 3 columns on large screens, 2 columns on medium screens, and 1 column on small screens
-            
+            const itemsList = document.getElementById ("itemsList");
+            while (itemsList.firstChild){
+                itemsList.removeChild (itemsList.firstChild);
+            } 
+            items.forEach (item => {
+                const col = document.createElement ("div");
+                col.className = "col-lg-4 col-md-6 col-sm-12";
+    
+                const card = document.createElement ("div"); 
+                card.className = "card h-100 shadow-sm";
+                
+                const cardBody = document.createElement ("div"); 
+                cardBody.className = 'card-body';
+
+                const title = document.createElement ("h5");
+                title.className = "card-title"; 
+                title.textContent = item.name;
+                
+                const addBtn = document.createElement("button");
+                addBtn.className = "btn btn-primary";
+                addBtn.textContent = "Add to Cart";
+                addBtn.onclick = () => addToCart(item);
+
+                cardBody.appendChild(title);
+                cardBody.appendChild(addBtn);
+                card.appendChild(cardBody);
+                col.appendChild(card);
+                itemsList.appendChild(col);
+            })
+
+        const cart = [];
+
+        function addToCart(item) {
+            cart.push(item);
+            alert(`${item.name} added to cart! Total items: ${cart.length}`);
+            console.log("Cart:", cart);
+        }
 
         }
 
